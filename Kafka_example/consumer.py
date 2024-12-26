@@ -17,7 +17,7 @@ consumer = KafkaConsumer(
 for message in consumer:
     print(message.value)
 
-#consume messages and put into S3
+#consume messages and put into S3 each with unique name
 s3 = S3FileSystem()
 for count, i in enumerate(consumer):
     with s3.open("s3://kafka-stock-market-tutorial-youtube-darshil/stock_market_{}.json".format(count), 'w') as file:
