@@ -17,7 +17,7 @@ except KafkaError as e:
 finally:
     producer.close()
 
-
+# To send continuous stream from CSV
 df = pd.read_csv("data/indexProcessed.csv")
 df.head()
 while True:
