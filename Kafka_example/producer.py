@@ -16,3 +16,12 @@ except KafkaError as e:
     print(f"Error sending message: {e}")
 finally:
     producer.close()
+
+
+df = pd.read_csv("data/indexProcessed.csv")
+df.head()
+while True:
+    dict_stock = df.sample(1).to_dict(orient="records")[0]
+    producer.send('demo_test', value=dict_stock)
+    sleep(1)
+producer.flush() #clear data from kafka server
