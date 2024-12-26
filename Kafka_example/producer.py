@@ -1,6 +1,7 @@
 from kafka import KafkaProducer, KafkaConsumer
 from kafka.errors import KafkaError
 import json
+from time import sleep
 
 # Define Kafka producer
 producer = KafkaProducer(
