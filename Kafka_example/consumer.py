@@ -1,5 +1,8 @@
 from kafka import KafkaConsumer
+from time import sleep
+from json import dumps,loads
 import json
+from s3fs import S3FileSystem
 
 # Define Kafka consumer
 consumer = KafkaConsumer(
@@ -13,4 +16,10 @@ consumer = KafkaConsumer(
 # Consume messages with error handling for non-JSON messages
 for message in consumer:
     print(message.value)
+
+#consume messages and put into S3
+s3 = S3FileSystem()
+for count, i in enumerate(consumer):
+    with s3.open("s3://kafka-stock-market-tutorial-youtube-darshil/stock_market_{}.json".format(count), 'w') as file:
+        json.dump(i.value, file)    
 
