@@ -1,0 +1,7 @@
+Run in Docker
+- Kafka
+- Zookeeper
+- Python Data Generator
+- Postgres DB
+- Kafka Producer (Python)
+- Flink Consumer (Maven Java Service)
