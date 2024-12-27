@@ -1,4 +1,4 @@
-FROM flink:latest-scala_2.12-java8-python3.8
+FROM apache/flink:latest
 
 # Install additional dependencies if needed
 RUN apt-get update && apt-get install -y python3-pip
