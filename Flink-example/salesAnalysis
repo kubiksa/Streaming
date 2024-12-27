@@ -1,0 +1,73 @@
+from pyflink.dataset import ExecutionEnvironment
+from pyflink.dataset import DataSet
+from pyflink.common.typeinfo import Types
+from pyflink.common.serialization import Encoder
+import csv
+
+# Define the DTO class for Category Sales
+class CategorySalesDTO:
+    def __init__(self, category, total_sales, count):
+        self.category = category
+        self.total_sales = total_sales
+        self.count = count
+
+    def get_category(self):
+        return self.category
+
+    def get_total_sales(self):
+        return self.total_sales
+
+    def get_count(self):
+        return self.count
+
+# Initialize the execution environment
+env = ExecutionEnvironment.get_execution_environment()
+
+# Read CSV files into DataSets
+order_items = env.read_csv('~/mylocalsystem/Datasets/order_items.csv', 
+                            ignore_first_line=True,
+                            pojo_type=OrderItem,
+                            type_info=Types.POJO(OrderItem))
+
+products = env.read_csv('~/mylocalsystem/Datasets/products.csv', 
+                         ignore_first_line=True,
+                         pojo_type=Product,
+                         type_info=Types.POJO(Product))
+
+# Join the datasets on productId
+joined = order_items.join(products) \
+    .where("productId") \
+    .equal_to("productId") \
+    .with(lambda first, second: (
+        second.productId,
+        second.name,
+        first.pricePerUnit,
+        first.quantity,
+        first.pricePerUnit * first.quantity,
+        second.category
+    )) \
+    .returns(Types.TUPLE(Types.STRING(), Types.STRING(), Types.FLOAT(), Types.INT(), Types.FLOAT(), Types.STRING()))
+
+# Group by category and calculate total sales and count
+category_sales = joined.map(lambda record: CategorySalesDTO(record[5], record[4], 1)) \
+    .returns(CategorySalesDTO) \
+    .group_by("category") \
+    .reduce(lambda value1, value2: CategorySalesDTO(
+        value1.get_category(),
+        value1.get_total_sales() + value2.get_total_sales(),
+        value1.get_count() + value2.get_count()
+    ))
+
+# Sort by total sales in descending order and print results
+category_sales.sort_partition("total_sales", order="DESCENDING").print()
+
+# Output to CSV file
+def write_to_csv(category_sales_dto):
+    with open('~/mylocalsystem/output/new-output.csv', mode='a') as file:
+        writer = csv.writer(file)
+        writer.writerow([category_sales_dto.get_category(), category_sales_dto.get_total_sales(), category_sales_dto.get_count()])
+
+category_sales.output(write_to_csv)
+
+# Execute the Flink job
+env.execute("Sales Analysis")
